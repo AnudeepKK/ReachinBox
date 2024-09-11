@@ -1,10 +1,6 @@
 import { google } from 'googleapis';
 import { config } from './keys';
 
-console.log('Client ID:', config.gmail.clientId);
-console.log('Client Secret:', config.gmail.clientSecret ? '[REDACTED]' : 'Missing');
-console.log('Redirect URI:', config.gmail.redirectUri);
-
 const oauth2Client = new google.auth.OAuth2(
   config.gmail.clientId,
   config.gmail.clientSecret,

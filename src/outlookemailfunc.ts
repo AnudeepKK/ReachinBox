@@ -44,7 +44,7 @@ export const getLatestEmail = async () => {
 
 export const sendEmail = async (to: string, subject: string, body: string) => {
   try {
-    const client = await getOutlookClient(); // Added await here
+    const client = await getOutlookClient(); 
     const message = {
       subject: subject,
       body: {
