@@ -1,4 +1,4 @@
-import { ConfidentialClientApplication, Configuration, AuthorizationUrlRequest, AuthorizationCodeRequest } from "@azure/msal-node";
+import { ConfidentialClientApplication, Configuration, AuthorizationUrlRequest, AuthorizationCodeRequest, SilentFlowRequest } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { config } from './keys';
 
@@ -7,6 +7,7 @@ if (!config.outlook.clientId || !config.outlook.clientSecret || !config.outlook.
 }
 
 let accessToken: string | null = null;
+let account: any = null;  // Store the account to use in silent requests
 
 const msalConfig: Configuration = {
   auth: {
@@ -19,25 +20,28 @@ const msalConfig: Configuration = {
 const pca = new ConfidentialClientApplication(msalConfig);
 const redirectUri = config.outlook.redirectUri;
 
+// Get the authorization URL to redirect the user for consent
 export const getOutlookAuthUrl = async () => {
   const authCodeUrlParameters: AuthorizationUrlRequest = {
-    scopes: ["https://graph.microsoft.com/.default","api://d5e34942-b1aa-475e-ac1e-addd7b829732"],
+    scopes: ["api://771a381a-b6ba-41c1-93e6-e170138af523/Anudeep"],
     redirectUri: redirectUri,
   };
 
   return await pca.getAuthCodeUrl(authCodeUrlParameters);
 };
 
+// Get the token using the authorization code
 export const getOutlookToken = async (code: string) => {
   const tokenRequest: AuthorizationCodeRequest = {
     code: code,
-    scopes: ["https://graph.microsoft.com/.default","api://d5e34942-b1aa-475e-ac1e-addd7b829732"],
+    scopes: ["api://771a381a-b6ba-41c1-93e6-e170138af523/Anudeep"],
     redirectUri: redirectUri,
   };
   
   try {
     const response = await pca.acquireTokenByCode(tokenRequest);
     accessToken = response.accessToken;
+    account = response.account;  // Store the account for future silent requests
     console.log('Token acquired successfully');
     return accessToken;
   } catch (error) {
@@ -46,18 +50,51 @@ export const getOutlookToken = async (code: string) => {
   }
 };
 
+// Refresh the token silently if it has expired
+export const refreshOutlookToken = async () => {
+  if (!account) {
+    throw new Error('No account found to refresh token. Please authenticate first.');
+  }
+
+  const silentRequest: SilentFlowRequest = {
+    account: account,
+    scopes: ["api://771a381a-b6ba-41c1-93e6-e170138af523/Anudeep"],
+  };
+
+  try {
+    const response = await pca.acquireTokenSilent(silentRequest);
+    accessToken = response.accessToken;
+    console.log('Token refreshed successfully');
+    return accessToken;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    throw error;
+  }
+};
+
+// Get the Microsoft Graph Client instance
 export const getOutlookClient = () => {
   if (!accessToken) {
-    console.error('Access token not available. Please authenticate first.');
+    console.error('Access token not available. Please authenticate or refresh token first.');
     throw new Error('Access token not available. Please authenticate first.');
   }
+
   return Client.init({
-    authProvider: (done) => {
-      done(null, accessToken);
+    authProvider: async (done) => {
+      // Check if the token needs to be refreshed
+      try {
+        if (!accessToken) {
+          await refreshOutlookToken(); // Attempt to refresh token if needed
+        }
+        done(null, accessToken); // Provide the valid token to the client
+      } catch (error) {
+        done(error, null); // Return an error if token could not be refreshed
+      }
     }
   });
 };
 
+// Verify that the token works by calling the Microsoft Graph API
 export const verifyOutlookToken = async () => {
   try {
     const client = getOutlookClient();

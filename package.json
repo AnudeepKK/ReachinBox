@@ -15,6 +15,7 @@
     "@azure/msal-node": "^2.9.2",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@types/cron": "^2.4.0",
+    "bullmq": "^5.12.15",
     "cron": "^3.1.7",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

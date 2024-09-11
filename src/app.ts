@@ -4,7 +4,7 @@ import { getOutlookAuthUrl, getOutlookToken, verifyOutlookToken } from './outloo
 import { processEmail as processGmailEmail } from './emailfunc';
 import { processEmail as processOutlookEmail } from './outlookemailfunc';
 import { config } from './keys';
-import './selfauto'; 
+import { startAutomatedProcessing } from './scheduler';
 
 const app = express();
 const port = 3000;
@@ -39,7 +39,7 @@ app.get('/auth/outlook', async (req, res) => {
   }
 });
 
-app.get('/auth/outlook/callback', async (req, res) => {
+app.get('/auth/redirect', async (req, res) => {
   const code = req.query.code as string;
   try {
     console.log('Received auth code:', code);
@@ -88,6 +88,8 @@ app.get('/process-email/:provider', async (req, res) => {
     res.status(500).send('Error: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 });
+
+startAutomatedProcessing();
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
