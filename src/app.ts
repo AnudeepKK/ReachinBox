@@ -39,7 +39,7 @@ app.get('/auth/outlook', async (req, res) => {
   }
 });
 
-app.get('/auth/redirect', async (req, res) => {
+app.get('/auth/outlook/callback', async (req, res) => {
   const code = req.query.code as string;
   try {
     console.log('Received auth code:', code);
