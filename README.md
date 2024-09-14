@@ -22,6 +22,17 @@ This tool automatically parses and checks emails from Google and Outlook account
 4. **Auto-Response**: The tool uses OpenAI to generate an appropriate reply based on the email content and automatically sends the response.
 5. **Task Scheduling**: BullMQ schedules the task of reading emails and processing them asynchronously to ensure scalability.
 
+## Command to run
+- **To install node packages**
+  ```
+  npm install
+  ```
+- **To start server**
+   ```
+   npm start
+   ```
+   
+
 ## Endpoints
 - **Gmail OAuth**: 
   ```
